@@ -40,23 +40,18 @@ impl Coords {
     }
 }
 
-fn main() {
 
-    let puzzle_input = read_input("puzzle_input.txt").unwrap();
-
+// This function parse the movements of the given input string with a match based on the 4 possible
+// symbols
+fn parse_movements(s: &str) -> Vec<Coords> {
     let mut actual_pos = Coords {
         x: 0,
         y: 0,
     };
-    
-    // vector of consecutive positions on the grid
+
     let mut positions: Vec<Coords> = vec![];
 
-    positions.push(actual_pos.clone());
-    
-    for i in puzzle_input.chars() {
-
-        // matching the possible movement chars 
+    for i in s.chars() {
         match i {
             '^' => actual_pos.move_up(),
             'v' => actual_pos.move_down(),
@@ -66,20 +61,70 @@ fn main() {
         }
         positions.push(actual_pos.clone());
     }
-
-    // the first sorting sorts all elements by the x coordinate
-    positions
-        .sort_by( |a, b| (a.x).partial_cmp(&(b.x)).unwrap());
-
-    // the second sorting sorts all elements by the y coordinate
-    positions
-        .sort_by( |a, b| (a.y).partial_cmp(&(b.y)).unwrap());
-
-
-    println!("Positions list length {}", puzzle_input.len());
     
-    // eliminate all duplicates in a sorted array
-    positions.dedup();
-            
-    println!("Solution first part: {}", positions.len());
+    positions
+}
+
+// This function sort a vector of coordinates, removes duplicates and return the size of the final
+// vec
+
+
+fn total_houses(mut p: Vec<Coords>) -> usize {
+    p.sort_by(|a,b| (a.x).partial_cmp(&(b.x)).unwrap());
+    p.sort_by(|a,b| (a.y).partial_cmp(&(b.y)).unwrap());
+    p.dedup();
+ 
+    p.len()
+}
+
+
+// This function breaks the input string in 2 substrings
+// Santa movements are in even position in the puzzle_input
+// Robo-Santa movements are in odd position in the puzzle_input
+fn break_input(s: &str) -> (String,String) {
+    let s1 = s
+        .chars()
+        .enumerate()
+        .filter(| (i,_) | i % 2 == 0)
+        .map(|(_,e)| e)
+        .collect::<String>();
+
+    let s2 = s
+        .chars()
+        .enumerate()
+        .filter(| (i,_) | i % 2 != 0)
+        .map(|(_,e)| e)
+        .collect::<String>();
+
+    (s1,s2)
+}
+
+fn main() {
+
+    let puzzle_input = read_input("puzzle_input.txt").unwrap();
+
+    // first part solution
+    
+    let coords = parse_movements(&puzzle_input);
+    let first_sol = total_houses(coords);
+
+    println!("Solution first part: {}", first_sol);
+
+    // second part solution
+    
+    // break total movements in parts (between Santa and Robo-Santa)
+    let (santa_input,robo_input) = break_input(&puzzle_input);
+
+    // parse movements of the 2 inputs separately
+    let mut santa_moves = parse_movements(&santa_input);
+    let robo_moves = parse_movements(&robo_input);
+
+    // Merge the coordinates togheter for finding duplicates
+    santa_moves.extend(robo_moves);
+
+    // find duplicates
+    let second_sol = total_houses(santa_moves);
+
+    println!("Solution second part: {}", second_sol);
+
 }
